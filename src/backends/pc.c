@@ -8,6 +8,10 @@
 #include <SDL2/SDL.h>
 #include "pc.h"
 
+#define NULL 0
+#define LCD_WIDTH_PX 384
+#define LCD_HEIGHT_PX 216
+
 int initDisplay(void ** display){
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -58,4 +62,39 @@ void moveEntities(unsigned short key, struct Entity * entities) {
 int detectDeath(struct Entity * entities) {
     // any entity of enemy hitting player
     // any instance of player off the screen
+    
+    // Get the player, first of all
+    Entity * player = entities;
+    Coord playerCoords = player->pos;
+
+    // If the player is off the screen, die
+    if (playerCoords.x < 0 || playerCoords.x > LCD_WIDTH_PX || playerCoords.y < 0 || playerCoords.y > LCD_HEIGHT_PX) {
+        return 1;
+    }
+
+    // Go through each entity
+    Entity * entity = ++entities;
+    while (entity != NULL) {
+        
+	// Check the type
+	if (entity->type != Entity) {
+            entity++;
+	    continue;
+	}
+
+	// Entity boundaries
+	int minX = entity->pos.x;
+	int minY = entity->pos.y;
+	int maxX = minX + 32;
+	int maxY = minY + 32;
+
+	// Check if player collided with them
+	if (playerCoords.x > minX && playerCoords.x < maxX && playerCoords.y > minY && playerCoords.y < maxY) {
+            return 1;
+	}
+
+	entity++;
+    }
+
+    return 0;
 }
