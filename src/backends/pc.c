@@ -8,7 +8,6 @@
 #include <SDL2/SDL.h>
 #include "pc.h"
 
-#define NULL 0
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
 #define RIGHT SDLK_RIGHT
@@ -175,8 +174,8 @@ void moveEntities(unsigned short * keys, struct Entity * entities, struct Block 
 int detectDeath(struct Entity * entities) {
 
     // Get the player, first of all
-    Entity * player = entities;
-    Coord playerCoords = player->pos;
+    struct Entity * player = entities;
+    struct Coord playerCoords = player->pos;
 
     // If the player is off the screen, die
     if (playerCoords.x < 0 || playerCoords.x > LCD_WIDTH_PX || playerCoords.y < 0 || playerCoords.y > LCD_HEIGHT_PX) {
@@ -184,27 +183,27 @@ int detectDeath(struct Entity * entities) {
     }
 
     // Go through each entity
-    Entity * entity = ++entities;
+    struct Entity * entity = entities;
     while (entity != NULL) {
         
-	// Check the type
-	if (entity->type != Entity) {
-            entity++;
-	    continue;
-	}
+        // Check the type
+        if (entity->type != Enemy) {
+            entity = entity->next;
+            continue;
+        }
 
-	// Entity boundaries
-	int minX = entity->pos.x;
-	int minY = entity->pos.y;
-	int maxX = minX + 32;
-	int maxY = minY + 32;
+        // Entity boundaries
+        int minX = entity->pos.x;
+        int minY = entity->pos.y;
+        int maxX = minX + 32;
+        int maxY = minY + 32;
 
-	// Check if player collided with them
-	if (playerCoords.x > minX && playerCoords.x < maxX && playerCoords.y > minY && playerCoords.y < maxY) {
-            return 1;
-	}
+        // Check if player collided with them
+        if (playerCoords.x > minX && playerCoords.x < maxX && playerCoords.y > minY && playerCoords.y < maxY) {
+                return 1;
+        }
 
-	entity++;
+        entity++;
     }
 
     return 0;
