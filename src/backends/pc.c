@@ -1,9 +1,3 @@
-// void *GetVRAMAddress (Can ignore as just obtains the address of VRAM in memory)
-// void Bdisp_PutDisp_DD (Puts VRAM to the display and swaps the screens (uses double buffering))
-// int GetKeyWait_OS(int* column, int* row, int type_of_waiting, int timeout_period, int menu, unsigned short* keycode)
-// int GetKey(int* key) (blocking function)
-// void PrintXY(int x, int y, char* message, int mode, int color)
-
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "pc.h"
@@ -11,12 +5,14 @@
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
 
-#define HOR_ACC 10
-#define VER_ACC 10
-#define HOR_DECEL 0.5
-#define VER_DECEL 0.5
-#define TIME_STEP 4
+#define HOR_ACC 30
+#define VER_ACC 15
+#define HOR_DECEL 0.6
+#define VERT_DECEL 1
+#define GRAVITY 2
+#define TIME_STEP 2
 
+#define SCROLL_DIST 100
 
 int initDisplay(void ** display){
     SDL_Init(SDL_INIT_VIDEO);
@@ -139,8 +135,10 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
     for (struct Block * block = level; block != NULL; block = block->next) {
         for (int i = block->pos.y; i < block->pos.y + block->height; ++i) {
             for (int j = block->pos.x; j < block->pos.x + block->width; ++j) {
-                pixels[j + i * width] = 
-                    SDL_MapRGBA(window_surface->format, 255, 0, 0, 255);
+                if (!(j < 0 || j >= width || i < 0 || i >= height)) {
+                    pixels[j + i * width] = 
+                        SDL_MapRGBA(window_surface->format, 255, 0, 0, 255);
+                }
             }
         }
     }
@@ -148,8 +146,10 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
     for (struct Entity * entity = entities; entity != NULL; entity = entity->next) {
         for (int i = entity->pos.y; i < entity->pos.y + 32; ++i) {
             for (int j = entity->pos.x; j < entity->pos.x + 32; ++j) {
-                pixels[j + i * width] = 
-                    SDL_MapRGBA(window_surface->format, 0, 255, 0, 255);
+                if (!(j < 0 || j >= width || i < 0 || i >= height)) {
+                    pixels[j + i * width] = 
+                        SDL_MapRGBA(window_surface->format, 0, 255, 0, 255);
+                }
             }
         }
     }
@@ -167,8 +167,7 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
         }
         switch (key->key) {
             case 0:
-               // If x <= 80, do not move player, move enemies
-                if (cur_entity->pos.x <= 80) {
+                if (cur_entity->pos.x <= SCROLL_DIST) {
                     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
                         if (cur_entity->type != Player) {
                             cur_entity->acc.x += HOR_ACC;
@@ -184,7 +183,7 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
                 break;
             case 1:
                 // If x >= 304, do not move player, move enemies
-                if (cur_entity->pos.x >= 304) {
+                if (cur_entity->pos.x >= LCD_WIDTH_PX-SCROLL_DIST) {
                     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
                         if (cur_entity->type != Player) {
                             cur_entity->acc.x -= HOR_ACC;
@@ -200,13 +199,16 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
                 break;
             case 2:
                 // Change y acceleration
-                cur_entity->acc.y -= VER_ACC;
+                cur_entity->acc.y = -VER_ACC;
                 done[key->key] = 1;
                 break;
             default:
                 break;
         }
     }
+
+    // Make player fall
+    cur_entity = entities;
 
     // Decrease everyone's acceleration
     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
@@ -217,8 +219,8 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
         }
 
         if (cur_entity->type == Player) {
-            if (cur_entity->acc.y >= 0.5 || -0.5 >= cur_entity->acc.y) {
-                cur_entity->acc.y *= VER_DECEL;
+            if (cur_entity->acc.y < GRAVITY) {
+                cur_entity->acc.y += VERT_DECEL;
             } else {
                 cur_entity->acc.y = 0;
             }
@@ -251,9 +253,26 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
         cur_entity->pos.y += floor(cur_entity->vel.y);
     }
 
+    cur_entity = entities;
+
     for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
         cur_block->pos.x += floor(cur_block->vel.x);
     }
+
+    for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
+            // Entity boundaries
+        int minX = cur_block->pos.x;
+        int minY = cur_block->pos.y;
+        int maxX = minX + cur_block->width;
+        int maxY = minY + cur_block->height;
+
+        // Check if player collided with them
+        if (entities->pos.x + 32 > minX && entities->pos.x < maxX && entities->pos.y + 32 > minY && entities->pos.y < maxY) {
+            entities->pos.y = minY - 32;
+            break;
+        }
+    }
+
 }
 
 int detectDeath(struct Entity * entities) {
@@ -263,7 +282,7 @@ int detectDeath(struct Entity * entities) {
     struct Coord playerCoords = player->pos;
 
     // If the player is off the screen, die
-    if (playerCoords.x < 0 || playerCoords.x > LCD_WIDTH_PX || playerCoords.y < 0 || playerCoords.y > LCD_HEIGHT_PX) {
+    if (playerCoords.y > LCD_HEIGHT_PX) {
         return 1;
     }
 

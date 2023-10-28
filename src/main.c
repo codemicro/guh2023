@@ -15,6 +15,18 @@ void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum En
   entity->next = NULL;
 }
 
+void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width, int height) {
+  block->acc.x = acc[0];
+  block->acc.y = acc[1];
+  block->vel.x = vel[0];
+  block->vel.y = vel[1];
+  block->pos.x = pos[0];
+  block->pos.y = pos[1];
+  block->width = width;
+  block->height = height;
+  block->next = NULL;
+}
+
 #if defined(BACKEND_CALC)
 int main()
 #elif defined(BACKEND_PC)
@@ -29,7 +41,7 @@ int main(int argc, char** argv)
   initDisplay(&display);
 
   struct Entity * entities = malloc(sizeof(struct Entity));
-  struct Block * level = NULL;
+  struct Block * level = malloc(sizeof(struct Block));
   struct KeyNode * keys = NULL;
 
   int acc[] = {0, 0};
@@ -38,13 +50,21 @@ int main(int argc, char** argv)
 
   initEntity(entities, acc, vel, pos, Player);
 
+  int blockpos[] = {0, 180};
+  initBlock(level, acc, vel, blockpos, 384, 20);
+
+  int dead = 0;
   while (1) {
     pollEvents(&keys); // Keys
     moveEntities(keys, entities, level); // Use keys and our values of velocity/acceleration
-    detectDeath(entities); // Depends on character position
+    dead = detectDeath(entities); // Depends on character position
     updateDisplay(level, entities, display);
 
     clearKeyList(keys);
     keys = NULL;
+
+    if (dead) {
+      exit(0);
+    }
   }
 }
