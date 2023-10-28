@@ -9,15 +9,15 @@
 #include "pc.h"
 
 #define NULL 0
-#define LCD_WIDTH_PX 384
-#define LCD_HEIGHT_PX 216
+#define LCD_WIDTH_PX 640
+#define LCD_HEIGHT_PX 480
 
 int initDisplay(void ** display){
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_Window * window = SDL_CreateWindow("",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        640, 480,
+        LCD_WIDTH_PX, LCD_WIDTH_PX,
         SDL_WINDOW_RESIZABLE);
 
     *display = window;
