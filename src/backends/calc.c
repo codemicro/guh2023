@@ -36,8 +36,8 @@ struct Entity {
 int initDisplay(void * display) {
     
     // Draws the main sprite
-    Entity main_sprite = {{10, SPAWNING_Y}, 0, 0, Player, main_sprite};
-    CopySprite(main_sprite.sprite);
+    Entity main_sprite_entity = {{10, SPAWNING_Y}, 0, 0, Player, main_sprite};
+    CopySprite(main_sprite_entity.sprite);
 }
 
 void pollEvents(unsigned short * keys) {
