@@ -1,5 +1,6 @@
 
 #include "../sprites/main_sprite.h"
+#include <fxcg/display.h>
 
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
@@ -57,7 +58,7 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
 }
 
 void CopySprite(color_t* sprite, int x, int y, int width, int height) {
-    char* VRAM = (char*)0xA8000000;
+    color_t* VRAM = (color_t*) GetVRAMAddress();
     VRAM += LCD_WIDTH_PX*y + x;
     for(int j=y; j<y+height; j++) {
         for(int i=x; i<x+width; i++) {
