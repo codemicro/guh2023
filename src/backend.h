@@ -16,6 +16,11 @@ struct Pair {
     float x, y;
 };
 
+struct KeyNode {
+    unsigned short key;
+    struct KeyNode * next;
+};
+
 struct Entity {
     struct Coord pos;
     struct Pair vel, acc;
@@ -32,8 +37,9 @@ struct Block {
 };
 
 int initDisplay(void ** display);
-void pollEvents(unsigned short * keys);
-void moveEntities(unsigned short * keys, struct Entity * entities, struct Block * level);
+void clearKeyList(struct KeyNode * keys);
+void pollEvents(struct KeyNode ** keys);
+void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level);
 int detectDeath(struct Entity * entities);
 void updateDisplay(struct Block * level, struct Entity * entities, void * display);
 

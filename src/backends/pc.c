@@ -10,9 +10,13 @@
 
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
-#define RIGHT SDLK_RIGHT
-#define LEFT SDLK_LEFT
-#define JUMP SDLK_UP
+
+#define HOR_ACC 10
+#define VER_ACC 10
+#define HOR_DECEL 0.5
+#define VER_DECEL 0.5
+#define TIME_STEP 4
+
 
 int initDisplay(void ** display){
     SDL_Init(SDL_INIT_VIDEO);
@@ -25,8 +29,29 @@ int initDisplay(void ** display){
     *display = window;
 }
 
+void clearKeyList(struct KeyNode * keys) {
+    if (keys == NULL) {
+        return;
+    }
 
-void pollEvents(unsigned short * keys) {
+    struct KeyNode * prev = NULL;
+    struct KeyNode * cur = keys;
+
+    while (cur->next != NULL) {
+        if (prev != NULL) {
+            free(prev);
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    if (prev!= NULL) {
+        free(prev);
+    }
+    free(cur);
+}
+
+void pollEvents(struct KeyNode ** keys) {
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -34,21 +59,52 @@ void pollEvents(unsigned short * keys) {
                     /* Keyboard event */
                     /* Pass the event data onto PrintKeyInfo() */
                     case SDL_KEYDOWN:
-                        if (keys != NULL) {
-                            switch (event.key.keysym.sym) {
-                                case LEFT:
-                                    *keys = 0;
-                                    break;
-                                case RIGHT:
-                                    *keys = 1;
-                                    break;
-                                case JUMP:
-                                    *keys = 2;
-                                    break;
-                                default:
-                                    break;
+                        switch (event.key.keysym.sym) {
+                            case SDLK_LEFT:
+                                if (*keys == NULL) {
+                                    *keys = malloc(sizeof(struct KeyNode));
+                                    (*keys)->key = 0;
+                                    (*keys)->next = NULL;
+                                } else {
+                                    struct KeyNode * end_node;
+                                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+                                    struct KeyNode * new_node = malloc(sizeof(struct KeyNode));
+                                    new_node->next = NULL;
+                                    new_node->key = 0;
+                                    end_node->next = new_node;
+                                }
+                                break;
+                            case SDLK_RIGHT:
+                                if (*keys == NULL) {
+                                    *keys = malloc(sizeof(struct KeyNode));
+                                    (*keys)->key = 1;
+                                    (*keys)->next = NULL;
+                                } else {
+                                    struct KeyNode * end_node;
+                                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+                                    struct KeyNode * new_node = malloc(sizeof(struct KeyNode));
+                                    new_node->next = NULL;
+                                    new_node->key = 1;
+                                    end_node->next = new_node;
+                                }
+                                break;
+                            case SDLK_UP:
+                                if (*keys == NULL) {
+                                    *keys = malloc(sizeof(struct KeyNode));
+                                    (*keys)->key = 2;
+                                    (*keys)->next = NULL;
+                                } else {
+                                    struct KeyNode * end_node;
+                                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+                                    struct KeyNode * new_node = malloc(sizeof(struct KeyNode));
+                                    new_node->next = NULL;
+                                    new_node->key = 2;
+                                    end_node->next = new_node;
+                                }
+                                break;
+                            default:
+                                break;
                             }
-                        }
                         break;
 
                     /* SDL_QUIT event (window close) */
@@ -71,7 +127,6 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
 
     unsigned int * pixels = window_surface->pixels;
 
-    // Set every pixel to white.
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
@@ -81,59 +136,89 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
         }
     }
 
+    for (struct Block * block = level; block != NULL; block = block->next) {
+        for (int i = block->pos.y; i < block->pos.y + block->height; ++i) {
+            for (int j = block->pos.x; j < block->pos.x + block->width; ++j) {
+                pixels[j + i * width] = 
+                    SDL_MapRGBA(window_surface->format, 255, 0, 0, 255);
+            }
+        }
+    }
+
+    for (struct Entity * entity = entities; entity != NULL; entity = entity->next) {
+        for (int i = entity->pos.y; i < entity->pos.y + 32; ++i) {
+            for (int j = entity->pos.x; j < entity->pos.x + 32; ++j) {
+                pixels[j + i * width] = 
+                    SDL_MapRGBA(window_surface->format, 0, 255, 0, 255);
+            }
+        }
+    }
+
     SDL_UpdateWindowSurface(window);
 }
 
-void moveEntities(unsigned short * keys, struct Entity * entities, struct Block * level) {
-    unsigned short * key;
+void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level) {
+    struct KeyNode * key;
     struct Entity * cur_entity = entities;
-    for (key = keys; key != NULL; key++) {
-        switch (*key) {
+    int done[] = {0, 0, 0};
+    for (key = keys; key != NULL; key=key->next) {
+        if (key->key < 3 && done[key->key]) {
+            continue;
+        }
+        switch (key->key) {
             case 0:
                // If x <= 80, do not move player, move enemies
                 if (cur_entity->pos.x <= 80) {
                     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
                         if (cur_entity->type != Player) {
-                            cur_entity->acc.x += 10;
+                            cur_entity->acc.x += HOR_ACC;
                         }
                     }
                     for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
-                         cur_block->acc.x += 10;
+                        cur_block->acc.x += HOR_ACC;
                     }
                 } else {
-                    cur_entity->acc.x -= 10;
+                    cur_entity->acc.x -= HOR_ACC;
                 }
+                done[key->key] = 1;
                 break;
             case 1:
                 // If x >= 304, do not move player, move enemies
                 if (cur_entity->pos.x >= 304) {
                     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
                         if (cur_entity->type != Player) {
-                            cur_entity->acc.x -= 10;
+                            cur_entity->acc.x -= HOR_ACC;
                         }
                     }
+                    for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
+                        cur_block->acc.x -= HOR_ACC;
+                    }
                 } else {
-                    cur_entity->acc.x += 10;
+                    cur_entity->acc.x += HOR_ACC;
                 }
+                done[key->key] = 1;
                 break;
             case 2:
                 // Change y acceleration
-                cur_entity->acc.y -= 10;
+                cur_entity->acc.y -= VER_ACC;
+                done[key->key] = 1;
+                break;
+            default:
                 break;
         }
     }
 
     // Decrease everyone's acceleration
     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
-        if (cur_entity->acc.x > 0.5) {
-            cur_entity->acc.x *= 0.50;
+        if (cur_entity->acc.x >= 0.5 || -0.5 >= cur_entity->acc.x) {
+            cur_entity->acc.x *= HOR_DECEL;
         } else {
             cur_entity->acc.x = 0;
         }
 
         if (cur_entity->type == Player) {
-            if (cur_entity->acc.y > 0.5) {
-                cur_entity->acc.y *= 0.50;
+            if (cur_entity->acc.y >= 0.5 || -0.5 >= cur_entity->acc.y) {
+                cur_entity->acc.y *= VER_DECEL;
             } else {
                 cur_entity->acc.y = 0;
             }
@@ -141,8 +226,8 @@ void moveEntities(unsigned short * keys, struct Entity * entities, struct Block 
     }
 
     for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
-        if (cur_block->acc.x > 0.5) {
-            cur_block->acc.x *= 0.50;
+        if (cur_block->acc.x >= 0.5 || -0.5 >= cur_block->acc.x) {
+            cur_block->acc.x *= HOR_DECEL;
         } else {
             cur_block->acc.x = 0;
         }
@@ -151,12 +236,12 @@ void moveEntities(unsigned short * keys, struct Entity * entities, struct Block 
     // Get velocity from acceleration
     cur_entity = entities;
     for (cur_entity = entities; cur_entity != NULL; cur_entity=cur_entity->next) {
-        cur_entity->vel.x += cur_entity->acc.x/10;
-        cur_entity->vel.y += cur_entity->acc.y/10;
+        cur_entity->vel.x = cur_entity->acc.x/TIME_STEP;
+        cur_entity->vel.y = cur_entity->acc.y/TIME_STEP;
     }
 
     for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
-        cur_block->vel.x += cur_block->acc.x/10;
+        cur_block->vel.x = cur_block->acc.x/TIME_STEP;
     }
 
     // Get position from velocity
@@ -167,7 +252,7 @@ void moveEntities(unsigned short * keys, struct Entity * entities, struct Block 
     }
 
     for (struct Block * cur_block = level; cur_block != NULL; cur_block=cur_block->next) {
-        cur_block->vel.x += floor(cur_block->vel.x);
+        cur_block->pos.x += floor(cur_block->vel.x);
     }
 }
 
