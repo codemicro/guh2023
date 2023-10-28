@@ -1,11 +1,9 @@
-//
-// Created by akp on 28/10/23.
-//
+#define BACKEND_PC 1
 
-#if defined(BACKEND_CALC)
-#include "backends/calc.c"
-#elif defined(BACKEND_PC)
-#include "backends/pc.c"
+#if defined(BACKEND_PC)
+#include "backends/pc.h"
+#elif defined(BACKEND_CALC)
+#include "backends/calc.h"
 #else
 #error "Missing backend definition"
 #endif
