@@ -27,6 +27,8 @@ void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width,
   block->next = NULL;
 }
 
+#include "backends/calc.c"
+
 #if defined(BACKEND_CALC)
 int main()
 #elif defined(BACKEND_PC)
