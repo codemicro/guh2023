@@ -31,7 +31,6 @@ struct Block {
     struct Coord pos;
     int width, height;
     struct Pair vel, acc;
-    color_t * sprite;
     struct Block * next;
     unsigned short texture[512];
 };

@@ -1,10 +1,12 @@
 //
 // Created by akp on 28/10/23.
 //
+
+#include <fxcg/heap.h>
+#include <fxcg/display.h>
 #include "level.h"
 #include "backend.h"
 #include "sprites/grass_block.h"
-#include <fxcg/heap.h>
 #include "sprites/main_sprite.h"
 #include "sprites/grass_block.h"
 
@@ -14,29 +16,10 @@
 #define GRASS 1
 #define BLOCK 2
 
-struct Block * initLevel() {
-  
-  int[] levelRaw = level_1;
-  int array_size = sizeof(levelRaw) / sizeof(int);
-  
-  Block * level = sys_malloc(array_size * sizeof(struct Block));
-  int i = 0;
-  for (int x = 0; x < level_1_width; x += 20) {
-    for (int y = 0; y < level_1_height; y += 20) {
-      
-      initBlock(level, 0, 0, {x, y}, 20, 20, getBlock(i));
-      level++;
-      i++;
-    }
-  }
-  
-  return level;
-}
-
 color_t * getBlock(int code) {
-  if (code == AIR) return {};
+  if (code == AIR) return NULL;
   if (code == GRASS) return grass_block;
-  return {};
+  return NULL;
 }
 
 void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum EntityType type, unsigned short model[2048]) {
@@ -62,11 +45,33 @@ void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width,
   block->pos.y = pos[1];
   block->width = width;
   block->height = height;
-  block->next = NULL;
   for (int i = 0; i < 512; i++) {
     block->texture[i] = tex[i];
   }
 }
+
+struct Block * initLevel() {
+  struct Block * level = sys_malloc(sizeof(struct Block));
+  struct Block * cur = level;
+  int i = 0;
+  for (int x = 0; x < level_1_width*16; x += 16) {
+    for (int y = 0; y < level_1_height*16; y += 16) {
+      
+      int acc[2] = {0, 0};
+      int vel[2] = {0, 0};
+      int pos[2] = {x, y};
+      if (getBlock(level_1[i]) != NULL) {
+        struct Block * new_level = sys_malloc(sizeof(struct Block));
+        initBlock(new_level, acc, vel, pos, 16, 16, getBlock(level_1[i]));
+        cur->next = new_level;
+        cur = cur->next;
+      }
+      i++;
+    }
+  }
+  
+  return level;
+};
 
 #if defined(BACKEND_CALC)
 int main()
@@ -83,16 +88,11 @@ int main(int argc, char** argv)
   struct Block * level = initLevel();
   struct KeyNode * keys = NULL;
 
-  // loadLevel(level); // Read level file and load to screen
-
   int acc[] = {0, 0};
   int vel[] = {0, 0};
   int pos[] = {100, 100};
 
   initEntity(entities, acc, vel, pos, Player, main_sprite);
-
-  int blockpos[] = {0, 180};
-  initBlock(level, acc, vel, blockpos, 384, 16, grass_block);
 
   int dead = 0;
   int menu = 0;
