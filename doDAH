@@ -1,0 +1,50 @@
+.SUFFIXES:
+
+CC = gcc
+PROGNAME = Mari-uh-oh
+
+ifeq ($(strip $(FXCGSDK)),)
+$(error "Please set FXCGSDK in your environment. export FXCGSDK=<path to sdk location>")
+endif
+
+include $(FXCGSDK)/toolchain/prizm_rules
+
+BUILD       := build
+
+MKG3AFLAGS := -n basic:$(PROGNAME) -i uns:../thumbnail/unselected.bmp -i sel:../thumbnail/selected.bmp
+CFLAGS	= -Os -Wall $(MACHDEP) $(INCLUDE) -ffunction-sections -fdata-sections
+LDFLAGS	= $(MACHDEP) -T$(FXCGSDK)/toolchain/prizm.x -Wl,-static -Wl,-gc-sections
+
+export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
+					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+					-I$(CURDIR)/$(BUILD) -I$(LIBFXCG_INC)
+
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
+					-L$(LIBFXCG_LIB)
+
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+
+all: $(BUILD)
+	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+$(BUILD):
+	@mkdir $@
+
+source = ./src/main.c ./src/backend
+
+mainpc: main.o backend.o pc.o
+	$(CC) ./build/main.o ./build/backend.o ./build/pc.o -o $@ -lmingw32 -lSDL2 -lSDL2main -ggdb3
+
+maincalc: main.o backend.o calc.o
+	$(CC) ./build/main.o ./build/backend.o ./build/calc.o -o $@ -ggdb3 -lc -lfxcg -lgcc
+
+%.o : ./src/%.c
+	$(CC) -c $^ -o ./build/$@ -ggdb3
+
+%.o : ./src/backends/%.c
+	$(CC) -c $^ -o ./build/$@ -ggdb3
+
+clean:
+	$(call rmdir,$(BUILD))
+	$(call rm,$(OUTPUT).bin)
+	$(call rm,$(OUTPUT).g3a)

@@ -2,7 +2,9 @@
 // Created by akp on 28/10/23.
 //
 #include "backend.h"
-#include <stdlib.h>
+#include <fxcg/heap.h>
+
+#define NULL 0
 
 void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum EntityType type) {
   entity->acc.x = acc[0];
@@ -27,24 +29,22 @@ void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width,
   block->next = NULL;
 }
 
-#include "backends/calc.c"
-
 #if defined(BACKEND_CALC)
 int main()
 #elif defined(BACKEND_PC)
 int main(int argc, char** argv)
 #endif
 {
-  // loadLevel(); // Read level file and load to screen
-
   // For calculator, things like removing top bar and stuff
   // For computer actually starting the screen window
-  void * display;
-  initDisplay(&display);
+  unsigned short * display;
+  initDisplay((void *)&display);
 
-  struct Entity * entities = malloc(sizeof(struct Entity));
-  struct Block * level = malloc(sizeof(struct Block));
+  struct Entity * entities = sys_malloc(sizeof(struct Entity));
+  struct Block * level = sys_malloc(sizeof(struct Block));
   struct KeyNode * keys = NULL;
+
+  // loadLevel(level); // Read level file and load to screen
 
   int acc[] = {0, 0};
   int vel[] = {0, 0};
@@ -66,7 +66,8 @@ int main(int argc, char** argv)
     keys = NULL;
 
     if (dead) {
-      exit(0);
+      return 0;
     }
   }
+  return 0;
 }

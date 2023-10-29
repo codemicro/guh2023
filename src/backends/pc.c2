@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
-#include "pc.h"
 
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
@@ -13,6 +12,39 @@
 #define TIME_STEP 2
 
 #define SCROLL_DIST 100
+
+enum EntityType {
+    Player,
+    Enemy,
+};
+
+struct Coord {
+    int x, y;
+};
+
+struct Pair {
+    float x, y;
+};
+
+struct KeyNode {
+    unsigned short key;
+    struct KeyNode * next;
+};
+
+struct Entity {
+    struct Coord pos;
+    struct Pair vel, acc;
+    enum EntityType type;
+    const unsigned short sprite[2048];
+    struct Entity * next;
+};
+
+struct Block {
+    struct Coord pos;
+    int width, height;
+    struct Pair vel, acc;
+    struct Block * next;
+};
 
 int initDisplay(void ** display){
     SDL_Init(SDL_INIT_VIDEO);

@@ -1,3 +1,6 @@
-#include <fxcg/display.h>
+#ifndef GRASS_BLOCK_H
+#define GRASS_BLOCK_H
 
-extern color_t grass_block;
+extern unsigned short grass_block;
+
+#endif
