@@ -17,7 +17,7 @@ jobs:
       - name: provide toolchain
         run: |-
           sudo apt-get update
-          sudo apt-get install mpc libmpfr-dev libgmp3-dev cmake ppl-pwl
+          sudo apt-get install mpc libmpfr-dev libgmp3-dev cmake libpwl4
           mkdir /usr/local/cross
           wget -P /usr/src/build-gcc https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
           wget -P /usr/src/build-binutils https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
