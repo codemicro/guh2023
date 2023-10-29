@@ -1,4 +1,3 @@
-#include "../sprites/main_sprite.h"
 #include <fxcg/display.h>
 #include <fxcg/heap.h>
 #include <fxcg/keyboard.h>
@@ -6,11 +5,11 @@
 #define LCD_WIDTH_PX 384
 #define LCD_HEIGHT_PX 216
 
-#define HOR_ACC 30
-#define VER_ACC 15
+#define HOR_ACC 5
+#define VER_ACC 10
 #define HOR_DECEL 0.6
 #define VERT_DECEL 1
-#define GRAVITY 2
+#define GRAVITY 5
 #define TIME_STEP 2
 
 #define SCROLL_DIST 100
@@ -48,6 +47,7 @@ struct Block {
     int width, height;
     struct Pair vel, acc;
     struct Block * next;
+    unsigned short texture[2048];
 };
 
 color_t rgbToColor_t(char red, char green, char blue) {
@@ -85,56 +85,54 @@ void clearKeyList(struct KeyNode * keys) {
     sys_free(cur);
 }
 
-void pollEvents(struct KeyNode ** keys) {
+int pollEvents(struct KeyNode ** keys) {
     int keycol, keyrow;
     unsigned short waste;
-    // Not quite what I want -> makes it so that the program waits forever
-    while (GetKeyWait_OS(&keycol, &keyrow, KEYWAIT_HALTOFF_TIMEROFF, 0, 0, &waste))
-        {
-            if (keycol == 3 && keyrow == 9) {
-                if (*keys == NULL) {
-                    *keys = sys_malloc(sizeof(struct KeyNode));
-                    (*keys)->key = 0;
-                    (*keys)->next = NULL;
-                } else {
-                    struct KeyNode * end_node;
-                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
-                    struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
-                    new_node->next = NULL;
-                    new_node->key = 0;
-                    end_node->next = new_node;
-                }
-
-            } else if (keycol == 2 && keyrow == 8) {
-                if (*keys == NULL) {
-                    *keys = sys_malloc(sizeof(struct KeyNode));
-                    (*keys)->key = 1;
-                    (*keys)->next = NULL;
-                } else {
-                    struct KeyNode * end_node;
-                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
-                    struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
-                    new_node->next = NULL;
-                    new_node->key = 1;
-                    end_node->next = new_node;
-                }
-            } else if (keycol == 2 && keyrow == 9) {
-                if (*keys == NULL) {
-                    *keys = sys_malloc(sizeof(struct KeyNode));
-                    (*keys)->key = 2;
-                    (*keys)->next = NULL;
-                } else {
-                    struct KeyNode * end_node;
-                    for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
-                    struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
-                    new_node->next = NULL;
-                    new_node->key = 2;
-                    end_node->next = new_node;
-                }
-            } else if (keycol == 9 && keyrow == 4) {
-                // Do something to summon the menu
-            }
+    GetKeyWait_OS(&keycol, &keyrow, KEYWAIT_HALTOFF_TIMEROFF, 0, 0, &waste);
+    if (keycol == 3 && keyrow == 9) {
+        if (*keys == NULL) {
+            *keys = sys_malloc(sizeof(struct KeyNode));
+            (*keys)->key = 0;
+            (*keys)->next = NULL;
+        } else {
+            struct KeyNode * end_node;
+            for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+            struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
+            new_node->next = NULL;
+            new_node->key = 0;
+            end_node->next = new_node;
         }
+
+    } else if (keycol == 2 && keyrow == 8) {
+        if (*keys == NULL) {
+            *keys = sys_malloc(sizeof(struct KeyNode));
+            (*keys)->key = 1;
+            (*keys)->next = NULL;
+        } else {
+            struct KeyNode * end_node;
+            for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+            struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
+            new_node->next = NULL;
+            new_node->key = 1;
+            end_node->next = new_node;
+        }
+    } else if (keycol == 2 && keyrow == 9) {
+        if (*keys == NULL) {
+            *keys = sys_malloc(sizeof(struct KeyNode));
+            (*keys)->key = 2;
+            (*keys)->next = NULL;
+        } else {
+            struct KeyNode * end_node;
+            for (end_node=*keys; end_node->next!=NULL; end_node=end_node->next);
+            struct KeyNode * new_node = sys_malloc(sizeof(struct KeyNode));
+            new_node->next = NULL;
+            new_node->key = 2;
+            end_node->next = new_node;
+        }
+    } else if (keycol == 4 && keyrow == 9) {
+        return 1;
+    }
+    return 0;
 }
 
 void updateDisplay(struct Block * level, struct Entity * entities, void * display)
@@ -150,20 +148,26 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
     }
 
     for (struct Block * block = level; block != NULL; block = block->next) {
-        for (int i = block->pos.y; i < block->pos.y + block->height; ++i) {
-            for (int j = block->pos.x; j < block->pos.x + block->width; ++j) {
-                if (!(j < 0 || j >= LCD_WIDTH_PX || i < 0 || i >= LCD_HEIGHT_PX)) {
-                    pixels[j + i * LCD_WIDTH_PX] = rgbToColor_t(255, 0, 0);
+        int y_offset = block->pos.y;
+        int x_offset = block->pos.x;
+        for (int i = 0; i < 16; ++i) {
+            for (int j = 0; j < block->width; ++j) {
+                if (!(j + x_offset < 0 || j + x_offset >= LCD_WIDTH_PX || i + y_offset < 0 || i + y_offset >= LCD_HEIGHT_PX)) {
+                    pixels[(j + x_offset) + (i + y_offset) * LCD_WIDTH_PX] = block->texture[j%16 + (i%32) * 16];
                 }
             }
         }
     }
 
     for (struct Entity * entity = entities; entity != NULL; entity = entity->next) {
-        for (int i = entity->pos.y; i < entity->pos.y + 32; ++i) {
-            for (int j = entity->pos.x; j < entity->pos.x + 32; ++j) {
-                if (!(j < 0 || j >= LCD_WIDTH_PX || i < 0 || i >= LCD_HEIGHT_PX)) {
-                    pixels[j + i * LCD_WIDTH_PX] = rgbToColor_t(0, 255, 0);
+        int y_offset = entity->pos.y;
+        int x_offset = entity->pos.x;
+        for (int i = 0; i < 32; i++) {
+            for (int j = 0; j < 32; j++) {
+                if (!(j + x_offset < 0 || j + x_offset >= LCD_WIDTH_PX || i + y_offset < 0 || i + y_offset >= LCD_HEIGHT_PX)) {
+                    if (entity->sprite[j + i * 32] != 0x0000) {
+                        pixels[j + x_offset + (i + y_offset) * LCD_WIDTH_PX] = entity->sprite[j + i * 32];
+                    }
                 }
             }
         }
@@ -172,7 +176,7 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
     Bdisp_PutDisp_DD();
 }
 
-void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level) {
+void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level, int * jump) {
     struct KeyNode * key;
     struct Entity * cur_entity = entities;
     int done[] = {0, 0, 0};
@@ -213,9 +217,12 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
                 done[key->key] = 1;
                 break;
             case 2:
-                // Change y acceleration
-                cur_entity->acc.y = -VER_ACC;
-                done[key->key] = 1;
+                if (*jump) {
+                    // Change y acceleration
+                    cur_entity->acc.y = -VER_ACC;
+                    done[key->key] = 1;
+                    *jump = 0;
+                }
                 break;
             default:
                 break;
@@ -284,6 +291,7 @@ void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block 
         // Check if player collided with them
         if (entities->pos.x + 32 > minX && entities->pos.x < maxX && entities->pos.y + 32 > minY && entities->pos.y < maxY) {
             entities->pos.y = minY - 32;
+            *jump = 1;
             break;
         }
     }
