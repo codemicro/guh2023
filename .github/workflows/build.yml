@@ -1,0 +1,53 @@
+name: Linux Build
+
+on:
+  push: {}
+  pull_request: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: provide toolchain
+        runs: |-
+          sudo apt-get update
+          sudo apt-get install mpc mpfr gmp cmake
+          mkdir /usr/local/cross
+          wget -P /usr/src/build-gcc https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
+          wget -P /usr/src/build-binutils https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
+          
+          cd /usr/src/build-binutils
+          ../binutils/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls
+          make
+          make install
+          
+          export PATH=$PATH:/usr/local/cross/bin
+          cd /usr/src/build-gcc
+          ../gcc/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls --enable-languages=c,c++ --without-headers
+          make all-gcc
+          sudo make install-gcc
+          make all-target-libgcc
+          sudo make install-target-libgcc
+
+          cd /usr/src
+          mkdir build-mkg3a
+          wget -P /usr/src/build-mkg3a https://gitlab.com/taricorp/mkg3a/-/archive/master/mkg3a-master.tar.gz
+          cd /usr/src/build-mkg3a
+          cmake .
+          make
+          su -c "make install"
+
+      - name: make
+        runs: make 
+
+          
+
+          
+
+ 
