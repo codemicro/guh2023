@@ -150,8 +150,8 @@ void updateDisplay(struct Block * level, struct Entity * entities, void * displa
     for (struct Block * block = level; block != NULL; block = block->next) {
         int y_offset = block->pos.y;
         int x_offset = block->pos.x;
-        for (int i = 0; i < 16; ++i) {
-            for (int j = 0; j < block->width; ++j) {
+        for (int i = 0; i < block->height; i++) {
+            for (int j = 0; j < block->width; j++) {
                 if (!(j + x_offset < 0 || j + x_offset >= LCD_WIDTH_PX || i + y_offset < 0 || i + y_offset >= LCD_HEIGHT_PX)) {
                     pixels[(j + x_offset) + (i + y_offset) * LCD_WIDTH_PX] = block->texture[j%16 + (i%32) * 16];
                 }

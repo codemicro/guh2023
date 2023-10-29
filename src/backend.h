@@ -1,4 +1,4 @@
-#define BACKEND_PC 1
+#define BACKEND_CALC 1
 
 #ifndef BACKEND_H
 #define BACKEND_H
@@ -34,11 +34,11 @@ struct Block {
     int width, height;
     struct Pair vel, acc;
     struct Block * next;
-    unsigned short texture[2048];
+    unsigned short texture[512];
 };
 
 int initDisplay(void ** display);
-void clearKeyList(struct KeyNode * keys);
+int clearKeyList(struct KeyNode * keys);
 int pollEvents(struct KeyNode ** keys);
 void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level, int * jump);
 int detectDeath(struct Entity * entities);

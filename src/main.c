@@ -1,25 +1,24 @@
-//
-// Created by akp on 28/10/23.
-//
-
 #include <fxcg/heap.h>
 #include <fxcg/display.h>
 #include "level.h"
 #include "backend.h"
 #include "sprites/grass_block.h"
+#include "sprites/dirt_block.h"
 #include "sprites/main_sprite.h"
-#include "sprites/grass_block.h"
 
 #define NULL 0
 
-#define AIR 0
-#define GRASS 1
-#define BLOCK 2
-
 color_t * getBlock(int code) {
-  if (code == AIR) return NULL;
-  if (code == GRASS) return grass_block;
-  return NULL;
+  switch (code) {
+    case Air:
+      return NULL;
+    case Grass:
+      return grass_block;
+    case Dirt:
+      return dirt_block;
+    default:
+      return NULL;
+  }
 }
 
 void initEntity(struct Entity * entity, int accx, int accy, int velx, int vely, int posx, int posy, enum EntityType type, unsigned short model[2048]) {
@@ -36,7 +35,7 @@ void initEntity(struct Entity * entity, int accx, int accy, int velx, int vely, 
   }
 }
 
-void initBlock(struct Block * block, int accx, int accy, int velx, int vely, int posx, int posy, int width, int height, unsigned short tex[2048]) {
+void initBlock(struct Block * block, int accx, int accy, int velx, int vely, int posx, int posy, int width, int height, unsigned short tex[512]) {
   block->acc.x = accx;
   block->acc.y = accy;
   block->vel.x = velx;
@@ -45,6 +44,7 @@ void initBlock(struct Block * block, int accx, int accy, int velx, int vely, int
   block->pos.y = posy;
   block->width = width;
   block->height = height;
+  block->next = NULL;
   for (int i = 0; i < 512; i++) {
     block->texture[i] = tex[i];
   }
@@ -55,16 +55,12 @@ struct Block * initLevel() {
   struct Block * cur = level;
   int i = 0;
   for (int y = 0; y < level_1_height*16; y += 16) {
-    for (int x = 0; x < level_1_width*16; x+= 16) {
-      
-      // If it's not air
+    for (int x = 0; x < level_1_width*16; x += 16) {
       if (getBlock(level_1[i]) != NULL) {
-        
-        // If we haven't initialised the level, start
-        if (cur == NULL) {
-          level = (struct Block *) malloc(sizeof(struct Block));
-          initBlock(level, 0, 0, 0, 0, x, y, 16, 16, getBlock(level_1[i]));
-          cur = level;
+        if (level == NULL) {
+            level = (struct Block *)sys_malloc(sizeof(struct Block));
+            initBlock(level, 0, 0, 0, 0, x, y, 16, 16, getBlock(level_1[i]));
+            cur = level;
         } else {
           struct Block * new_level = sys_malloc(sizeof(struct Block));
           initBlock(new_level, 0, 0, 0, 0, x, y, 16, 16, getBlock(level_1[i]));
@@ -72,13 +68,11 @@ struct Block * initLevel() {
           cur = cur->next;
         }
       }
-      
       i++;
     }
   }
-  
   return level;
-};
+}
 
 #if defined(BACKEND_CALC)
 int main()
@@ -95,11 +89,14 @@ int main(int argc, char** argv)
   struct Block * level = initLevel();
   struct KeyNode * keys = NULL;
 
-  int acc[] = {0, 0};
-  int vel[] = {0, 0};
-  int pos[] = {100, 100};
+  for (struct Block * curBlock = level; curBlock != NULL; curBlock = curBlock->next) {
+    if (curBlock->texture == dirt_block) {
+      PrintXY(3, 3, "husdigfhsd", 0, 0);
+      Bdisp_PutDisp_DD();
+    }
+  }
 
-  initEntity(entities, acc, vel, pos, Player, main_sprite);
+  initEntity(entities, 0, 0, 0, 0, 100, 100, Player, main_sprite);
 
   int dead = 0;
   int menu = 0;

@@ -20,7 +20,7 @@ TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	src src/backends src/sprites
 DATA		:=	data  
-INCLUDES	:= src/sprites
+INCLUDES	:=  src/sprites
 
 # MKG3AFLAGS
 MKG3AFLAGS := -n basic:Mari-uh-oh -i uns:../thumbnail/unselected.bmp -i sel:../thumbnail/selected.bmp
