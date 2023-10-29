@@ -1,12 +1,43 @@
 //
 // Created by akp on 28/10/23.
 //
+#include "level.h"
 #include "backend.h"
+#include "sprites/grass_block.h"
 #include <fxcg/heap.h>
 #include "sprites/main_sprite.h"
 #include "sprites/grass_block.h"
 
 #define NULL 0
+
+#define AIR 0
+#define GRASS 1
+#define BLOCK 2
+
+struct Block * initLevel() {
+  
+  int[] levelRaw = level_1;
+  int array_size = sizeof(levelRaw) / sizeof(int);
+  
+  Block * level = sys_malloc(array_size * sizeof(struct Block));
+  int i = 0;
+  for (int x = 0; x < level_1_width; x += 20) {
+    for (int y = 0; y < level_1_height; y += 20) {
+      
+      initBlock(level, 0, 0, {x, y}, 20, 20, getBlock(i));
+      level++;
+      i++;
+    }
+  }
+  
+  return level;
+}
+
+color_t * getBlock(int code) {
+  if (code == AIR) return {};
+  if (code == GRASS) return grass_block;
+  return {};
+}
 
 void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum EntityType type, unsigned short model[2048]) {
   entity->acc.x = acc[0];
@@ -49,7 +80,7 @@ int main(int argc, char** argv)
   initDisplay((void *)&display);
 
   struct Entity * entities = sys_malloc(sizeof(struct Entity));
-  struct Block * level = sys_malloc(sizeof(struct Block));
+  struct Block * level = initLevel();
   struct KeyNode * keys = NULL;
 
   // loadLevel(level); // Read level file and load to screen
