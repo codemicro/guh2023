@@ -51,21 +51,28 @@ void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width,
 }
 
 struct Block * initLevel() {
-  struct Block * level = sys_malloc(sizeof(struct Block));
+  struct Block * level = NULL;
   struct Block * cur = level;
   int i = 0;
-  for (int x = 0; x < level_1_width*16; x += 16) {
-    for (int y = 0; y < level_1_height*16; y += 16) {
+  for (int y = 0; y < level_1_height*16; y += 16) {
+    for (int x = 0; x < level_1_width*16; x+= 16) {
       
-      int acc[2] = {0, 0};
-      int vel[2] = {0, 0};
-      int pos[2] = {x, y};
+      // If it's not air
       if (getBlock(level_1[i]) != NULL) {
-        struct Block * new_level = sys_malloc(sizeof(struct Block));
-        initBlock(new_level, acc, vel, pos, 16, 16, getBlock(level_1[i]));
-        cur->next = new_level;
-        cur = cur->next;
+        
+        // If we haven't initialised the level, start
+        if (cur == NULL) {
+          level = (struct Block *) malloc(sizeof(struct Block));
+          initBlock(level, 0, 0, 0, 0, x, y, 16, 16, getBlock(level_1[i]));
+          cur = level;
+        } else {
+          struct Block * new_level = sys_malloc(sizeof(struct Block));
+          initBlock(new_level, 0, 0, 0, 0, x, y, 16, 16, getBlock(level_1[i]));
+          cur->next = new_level;
+          cur = cur->next;
+        }
       }
+      
       i++;
     }
   }
