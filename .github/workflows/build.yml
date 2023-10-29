@@ -21,8 +21,8 @@ jobs:
           sudo mkdir /usr/local/cross 
           sudo wget -P /usr/src/gcc https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
           sudo wget -P /usr/src/binutils https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
-          tar -xsf /usr/src/gcc/gcc-13.2.0.tar.gz /usr/src/gcc
-          tar -xsf /us/src/binutils /usr/src/binutils/binutils-2.41.tar.gz
+          tar -xsf /usr/src/gcc/gcc-13.2.0.tar.gz -C /usr/src/gcc
+          tar -xsf -C /usr/src/binutils /usr/src/binutils/binutils-2.41.tar.gz
           
           cd /usr/src/build-binutils
           ../binutils/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls
