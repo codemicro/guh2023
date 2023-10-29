@@ -27,25 +27,25 @@ jobs:
           sudo tar -xsf /usr/src/binutils/binutils-2.41.tar.gz -C /usr/src/binutils
 
           cd /usr/src
-          mkdir build-binutils
+          sudo mkdir build-binutils
           cd /usr/src/build-binutils
-          ../binutils/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls
+          sudo sh -c "../binutils/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls"
           make
           sudo make install
           
           export PATH=$PATH:/usr/local/cross/bin
           cd /usr/src
-          mkdir build-gcc
+          sudo mkdir build-gcc
           cd /usr/src/build-gcc
-          ../gcc/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls --enable-languages=c,c++ --without-headers
+          sudo sh -c "../gcc/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls --enable-languages=c,c++ --without-headers"
           make all-gcc
           sudo make install-gcc
           make all-target-libgcc
           sudo make install-target-libgcc
 
           cd /usr/src
-          mkdir build-mkg3a
-          wget -P /usr/src/build-mkg3a https://gitlab.com/taricorp/mkg3a/-/archive/master/mkg3a-master.tar.gz
+          sudo mkdir build-mkg3a
+          sudo wget -P /usr/src/build-mkg3a https://gitlab.com/taricorp/mkg3a/-/archive/master/mkg3a-master.tar.gz
           cd /usr/src/build-mkg3a
           cmake .
           make
