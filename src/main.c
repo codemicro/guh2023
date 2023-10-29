@@ -22,13 +22,13 @@ color_t * getBlock(int code) {
   return NULL;
 }
 
-void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum EntityType type, unsigned short model[2048]) {
-  entity->acc.x = acc[0];
-  entity->acc.y = acc[1];
-  entity->vel.x = vel[0];
-  entity->vel.y = vel[1];
-  entity->pos.x = pos[0];
-  entity->pos.y = pos[1];
+void initEntity(struct Entity * entity, int accx, int accy, int velx, int vely, int posx, int posy, enum EntityType type, unsigned short model[2048]) {
+  entity->acc.x = accx;
+  entity->acc.y = accy;
+  entity->vel.x = velx;
+  entity->vel.y = vely;
+  entity->pos.x = posx;
+  entity->pos.y = posy;
   entity->type = type;
   entity->next = NULL;
   for (int i = 0; i < 2048; i++) {
@@ -36,13 +36,13 @@ void initEntity(struct Entity * entity, int * acc, int * vel, int * pos, enum En
   }
 }
 
-void initBlock(struct Block * block, int * acc, int * vel, int * pos, int width, int height, unsigned short tex[2048]) {
-  block->acc.x = acc[0];
-  block->acc.y = acc[1];
-  block->vel.x = vel[0];
-  block->vel.y = vel[1];
-  block->pos.x = pos[0];
-  block->pos.y = pos[1];
+void initBlock(struct Block * block, int accx, int accy, int velx, int vely, int posx, int posy, int width, int height, unsigned short tex[2048]) {
+  block->acc.x = accx;
+  block->acc.y = accy;
+  block->vel.x = velx;
+  block->vel.y = vely;
+  block->pos.x = posx;
+  block->pos.y = posy;
   block->width = width;
   block->height = height;
   for (int i = 0; i < 512; i++) {
