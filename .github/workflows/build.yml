@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: provide toolchain
-        runs: |-
+        run: |-
           sudo apt-get update
           sudo apt-get install mpc mpfr gmp cmake
           mkdir /usr/local/cross
@@ -44,7 +44,7 @@ jobs:
           su -c "make install"
 
       - name: make
-        runs: make 
+        run: make 
 
           
 
