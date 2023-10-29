@@ -23,7 +23,7 @@ struct Entity {
     struct Coord pos;
     struct Pair vel, acc;
     enum EntityType type;
-    const unsigned short sprite[2048];
+    unsigned short sprite[2048];
     struct Entity * next;
 };
 
@@ -32,6 +32,7 @@ struct Block {
     int width, height;
     struct Pair vel, acc;
     struct Block * next;
+    unsigned short texture[2048];
 };
 
 int initDisplay(void ** display);

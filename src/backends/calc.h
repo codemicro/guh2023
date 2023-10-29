@@ -23,7 +23,7 @@ struct Entity {
     struct Coord pos;
     struct Pair vel, acc;
     enum EntityType type;
-    const unsigned short sprite[2048];
+    unsigned short sprite[2048];
     struct Entity * next;
 };
 
@@ -33,12 +33,13 @@ struct Block {
     struct Pair vel, acc;
     color_t * sprite;
     struct Block * next;
+    unsigned short texture[512];
 };
 
 int initDisplay(void ** display);
 void clearKeyList(struct KeyNode * keys);
-void pollEvents(struct KeyNode ** keys);
-void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level);
+int pollEvents(struct KeyNode ** keys);
+void moveEntities(struct KeyNode * keys, struct Entity * entities, struct Block * level, int * jump);
 int detectDeath(struct Entity * entities);
 void updateDisplay(struct Block * level, struct Entity * entities, void * display);
 
