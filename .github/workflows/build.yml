@@ -18,14 +18,14 @@ jobs:
         run: |-
           sudo apt-get update
           sudo apt-get install mpc libmpfr-dev libgmp3-dev cmake ppl-dev
-          mkdir /usr/local/cross
-          wget -P /usr/src/build-gcc https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
-          wget -P /usr/src/build-binutils https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
+          sudo mkdir /usr/local/cross
+          sudo wget -P /usr/src/build-gcc https://ftp.gnu.org/gnu/gcc/gcc-13.2.0/gcc-13.2.0.tar.gz
+          sudo wget -P /usr/src/build-binutils https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz
           
           cd /usr/src/build-binutils
           ../binutils/./configure --target=sh3eb-elf --prefix=/usr/local/cross --disable-nls
           make
-          make install
+          sudo make install
           
           export PATH=$PATH:/usr/local/cross/bin
           cd /usr/src/build-gcc
